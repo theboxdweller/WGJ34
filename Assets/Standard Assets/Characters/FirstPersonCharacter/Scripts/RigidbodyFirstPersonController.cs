@@ -77,6 +77,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             public float shellOffset; //reduce the radius by that ratio to avoid getting stuck in wall (a value of 0.1f is nice)
         }
 
+		const float MIN_WALLJUMP_VEL = 2.0f;
+		const float MAX_WALLJUMP_VEL = 10.0f;
 
         public Camera cam;
         public MovementSettings movementSettings = new MovementSettings();
@@ -182,15 +184,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					StickToGroundHelper();
 				}
 			}
+			// Walljump code
 			if (m_IsOnWall && !m_IsGrounded)
 			{
+				print(m_RigidBody.velocity);
 				if (m_Jump && m_StoredVelocity != Vector3.zero) {
+					// Walljump goes through
 					m_RigidBody.drag = 0f;
 					m_StoredVelocity = Vector3.Reflect (m_StoredVelocity, m_WallContactNormal);
 					m_RigidBody.velocity = new Vector3 (m_StoredVelocity.x, m_RigidBody.velocity.y, m_StoredVelocity.z);
 					m_RigidBody.AddForce (new Vector3 (0f, movementSettings.WallJumpForce, 0f), ForceMode.Impulse);
+					// Clamp velocity to range
+					float vy = (m_RigidBody.velocity.y < MIN_WALLJUMP_VEL) ? MIN_WALLJUMP_VEL : ((m_RigidBody.velocity.y > MAX_WALLJUMP_VEL) ? MAX_WALLJUMP_VEL : m_RigidBody.velocity.y);
+					m_RigidBody.velocity = new Vector3(m_RigidBody.velocity.x, vy, m_RigidBody.velocity.z);
+
 					m_Jumping = true;
-					m_StoredVelocity = Vector3.zero;
+					m_StoredVelocity = Vector3.zero; // Set to default
 				}
 			}
             
@@ -277,8 +286,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			m_PreviouslyOnWall = m_IsOnWall;
 			RaycastHit hitInfo;
+			// 1 << 8 => Layer 8 which is walls
+			Vector3 castDirection = Vector3.Normalize(new Vector3(m_RigidBody.velocity.x, 0.0f, m_RigidBody.velocity.z));
 			if (Physics.CapsuleCast(transform.position + new Vector3(0, m_Capsule.height/2f - m_Capsule.radius, 0), transform.position - new Vector3(0, m_Capsule.height/2f - m_Capsule.radius, 0), 
-				m_Capsule.radius * 0.98f, transform.forward, out hitInfo, 0.5f, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+				m_Capsule.radius * 0.98f, castDirection, out hitInfo, 0.5f, 1 << 8, QueryTriggerInteraction.Ignore))
 			{
 				m_IsOnWall = true;
 				m_WallContactNormal = hitInfo.normal;
@@ -289,6 +300,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_WallContactNormal = Vector3.up;
 			}
 			if (!m_PreviouslyOnWall && m_IsOnWall && m_StoredVelocity == Vector3.zero) {
+				// Use inverse global rotation to get world space velocity
 				m_StoredVelocity = m_RigidBody.velocity;
 			}
 		}
