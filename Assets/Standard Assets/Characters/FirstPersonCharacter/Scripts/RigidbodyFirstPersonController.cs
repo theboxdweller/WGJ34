@@ -80,6 +80,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		const float MIN_WALLJUMP_VEL = 2.0f;
 		const float MAX_WALLJUMP_VEL = 10.0f;
 
+		const float WALL_ANGLE_MIN = 0.0f;
+		const float WALL_ANGLE_MAX = 15.0f;
+		const float WALL_TURN_SPEED = (WALL_ANGLE_MAX - WALL_ANGLE_MIN) / 0.125f;
+
         public Camera cam;
         public MovementSettings movementSettings = new MovementSettings();
         public MouseLook mouseLook = new MouseLook();
@@ -201,7 +205,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					m_StoredVelocity = Vector3.zero; // Set to default
 				}
 			}
-            
+			// Wall-turning code
+			WallTurn();
+
             m_Jump = false;
         }
 
@@ -307,6 +313,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_StoredVelocity = m_RigidBody.velocity;
 			}
 			print (m_StoredVelocity);
+		}
+
+		private void WallTurn() {
+			float newRot = 0.0f;
+			bool wallOnRight = Vector3.Dot(transform.right, m_WallContactNormal) > 0;
+			float dr = WALL_TURN_SPEED * Time.deltaTime;
+			if (m_IsOnWall && !m_IsGrounded) {
+				if (wallOnRight)
+					if(!(transform.eulerAngles.z - dr < -WALL_ANGLE_MAX))
+						newRot = -dr;
+				else
+					if (!(transform.eulerAngles.z + dr > WALL_ANGLE_MAX))
+						newRot = dr;
+			} else {
+				if (wallOnRight && !(transform.eulerAngles.z + dr > WALL_ANGLE_MIN))
+					newRot = dr;
+				else if (!(transform.eulerAngles.z - dr < WALL_ANGLE_MIN))
+					newRot = -dr;
+			}
+			transform.Rotate(new Vector3(0.0f, 0.0f, newRot));
 		}
     }
 }
