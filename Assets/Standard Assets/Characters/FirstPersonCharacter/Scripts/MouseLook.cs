@@ -32,8 +32,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             float yRot = CrossPlatformInputManager.GetAxis("Mouse X") * XSensitivity;
             float xRot = CrossPlatformInputManager.GetAxis("Mouse Y") * YSensitivity;
-
-            m_CharacterTargetRot *= Quaternion.Euler (0f, yRot, 0f);
+			
+			m_CharacterTargetRot *= Quaternion.Euler(0f, yRot, character.localRotation.eulerAngles.z - m_CharacterTargetRot.eulerAngles.z);
             m_CameraTargetRot *= Quaternion.Euler (-xRot, 0f, 0f);
 
             if(clampVerticalRotation)

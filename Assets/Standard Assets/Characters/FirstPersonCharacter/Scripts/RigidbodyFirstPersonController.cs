@@ -316,7 +316,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private void WallTurn() {
 			float newRot = 0.0f;
-			bool wallOnRight = Vector3.Dot(transform.right, m_WallContactNormal) < 0;
+			bool wallOnRight = Vector3.Dot(transform.right, m_WallContactNormal) <= 0;
 			float dr = WALL_TURN_SPEED * Time.deltaTime;
 			if (m_IsOnWall && !m_IsGrounded) {
 				if (wallOnRight) {
