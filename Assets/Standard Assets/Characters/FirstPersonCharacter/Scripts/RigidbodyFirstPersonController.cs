@@ -318,24 +318,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float newRot = 0.0f;
 			bool wallOnRight = Vector3.Dot(transform.right, m_WallContactNormal) <= 0;
 			float dr = WALL_TURN_SPEED * Time.deltaTime;
+			float neutralEpsilon = 0.05f;
+			// Get angle in range (-180.0f, 180.0f]
+			float newZ = (transform.eulerAngles.z > 180.0f) ? transform.eulerAngles.z - 360.0f : transform.eulerAngles.z;
+
 			print(transform.eulerAngles.z);
 			if (m_IsOnWall && !m_IsGrounded) {
 				if (wallOnRight) {
-					if(!(transform.eulerAngles.z + dr > WALL_ANGLE_MAX))
+					if (!(newZ + dr > WALL_ANGLE_MAX))
 						newRot = dr;
 					else
-						newRot = WALL_ANGLE_MAX - transform.eulerAngles.z;
+						newRot = WALL_ANGLE_MAX - newZ;
 				}
 				else {
-					if(!(NegativeAngle(transform.eulerAngles.z) - dr < -WALL_ANGLE_MAX))
+					if (!(newZ - dr < -WALL_ANGLE_MAX))
 						newRot = -dr;
 					else
-						newRot = -WALL_ANGLE_MAX - NegativeAngle(transform.eulerAngles.z);
+						newRot = -WALL_ANGLE_MAX - newZ;
 				}
 			} else {
-				// Get angle in range (-180.0f, 180.0f]
-				float newZ = (transform.eulerAngles.z > 180.0f) ? transform.eulerAngles.z - 360.0f : transform.eulerAngles.z;
-				float neutralEpsilon = 0.1f;
 				if (newZ > neutralEpsilon) {
 					if (!(newZ - dr < neutralEpsilon))
 						newRot = -dr;
@@ -352,9 +353,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					newRot = 0.0f;
 			}
 			transform.Rotate(new Vector3(0.0f, 0.0f, newRot));
-		}
-		private float NegativeAngle(float f) {
-			return -((360.0f - f) % 360.0f);
 		}
     }
 }
