@@ -312,25 +312,38 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				// Use inverse global rotation to get world space velocity
 				m_StoredVelocity = m_RigidBody.velocity;
 			}
-			print (m_StoredVelocity);
 		}
 
 		private void WallTurn() {
 			float newRot = 0.0f;
-			bool wallOnRight = Vector3.Dot(transform.right, m_WallContactNormal) > 0;
+			bool wallOnRight = Vector3.Dot(transform.right, m_WallContactNormal) < 0;
 			float dr = WALL_TURN_SPEED * Time.deltaTime;
 			if (m_IsOnWall && !m_IsGrounded) {
-				if (wallOnRight)
+				if (wallOnRight) {
+					if(!(transform.eulerAngles.z + dr > WALL_ANGLE_MAX))
+						newRot = dr;
+					else
+						newRot = WALL_ANGLE_MAX - transform.eulerAngles.z;
+				}
+				else {
 					if(!(transform.eulerAngles.z - dr < -WALL_ANGLE_MAX))
 						newRot = -dr;
-				else
-					if (!(transform.eulerAngles.z + dr > WALL_ANGLE_MAX))
-						newRot = dr;
+					else
+						newRot = -WALL_ANGLE_MAX - transform.eulerAngles.z;
+				}
 			} else {
-				if (wallOnRight && !(transform.eulerAngles.z + dr > WALL_ANGLE_MIN))
-					newRot = dr;
-				else if (!(transform.eulerAngles.z - dr < WALL_ANGLE_MIN))
-					newRot = -dr;
+				if(transform.eulerAngles.z > 0) {
+					if (!(transform.eulerAngles.z - dr < WALL_ANGLE_MIN))
+						newRot = -dr;
+					else
+						newRot = -transform.eulerAngles.z;
+				}
+				else {
+					if (!(transform.eulerAngles.z + dr > WALL_ANGLE_MIN))
+						newRot = dr;
+					else
+						newRot = -transform.eulerAngles.z;
+				}
 			}
 			transform.Rotate(new Vector3(0.0f, 0.0f, newRot));
 		}
