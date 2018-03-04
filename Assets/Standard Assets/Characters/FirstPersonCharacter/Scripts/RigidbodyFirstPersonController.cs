@@ -187,7 +187,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// Walljump code
 			if (m_IsOnWall && !m_IsGrounded)
 			{
-				print(m_RigidBody.velocity);
 				if (m_Jump && m_StoredVelocity != Vector3.zero) {
 					// Walljump goes through
 					m_RigidBody.drag = 0f;
@@ -269,6 +268,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                    ((m_Capsule.height/2f) - m_Capsule.radius) + advancedSettings.groundCheckDistance, Physics.AllLayers, QueryTriggerInteraction.Ignore))
             {
                 m_IsGrounded = true;
+				m_StoredVelocity = Vector3.zero;
                 m_GroundContactNormal = hitInfo.normal;
             }
             else
@@ -287,9 +287,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_PreviouslyOnWall = m_IsOnWall;
 			RaycastHit hitInfo;
 			// 1 << 8 => Layer 8 which is walls
-			Vector3 castDirection = Vector3.Normalize(new Vector3(m_RigidBody.velocity.x, 0.0f, m_RigidBody.velocity.z));
+			Vector3 castDirection = (m_StoredVelocity == Vector3.zero) ? Vector3.Normalize(m_RigidBody.velocity) : Vector3.Normalize(m_StoredVelocity);
 			if (Physics.CapsuleCast(transform.position + new Vector3(0, m_Capsule.height/2f - m_Capsule.radius, 0), transform.position - new Vector3(0, m_Capsule.height/2f - m_Capsule.radius, 0), 
-				m_Capsule.radius * 0.98f, castDirection, out hitInfo, 0.5f, 1 << 8, QueryTriggerInteraction.Ignore))
+				m_Capsule.radius * 0.9f, castDirection, out hitInfo, 0.5f, 1 << 8, QueryTriggerInteraction.Ignore))
 			{
 				m_IsOnWall = true;
 				m_WallContactNormal = hitInfo.normal;
@@ -297,12 +297,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			else
 			{
 				m_IsOnWall = false;
+				m_StoredVelocity = Vector3.zero;
 				m_WallContactNormal = Vector3.up;
 			}
 			if (!m_PreviouslyOnWall && m_IsOnWall && m_StoredVelocity == Vector3.zero) {
 				// Use inverse global rotation to get world space velocity
 				m_StoredVelocity = m_RigidBody.velocity;
 			}
+			print(m_StoredVelocity);
 		}
     }
 }
